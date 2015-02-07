@@ -5,6 +5,7 @@ require 'fileutils'
 PLUGINS = {
   'show-summary' => 'Show story summary after starting',
   'pivotal' => 'PivotalTracker integration',
+  'jira' => 'Atlassian JIRA integration',
   'rebase' => 'Rebase to default branch before finishing',
   'pull-request' => 'Open pull request after finishing',
 }
