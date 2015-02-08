@@ -5,7 +5,6 @@ require 'fileutils'
 PLUGINS = {
   'show-summary' => 'Show story summary after starting',
   'pivotal' => 'PivotalTracker integration',
-  'jira' => 'Atlassian JIRA integration',
   'rebase' => 'Rebase to default branch before finishing',
   'pull-request' => 'Open pull request after finishing',
 }
@@ -76,7 +75,7 @@ class GitRoutines
       value = git(:config, key).strip
       if value == '' and !question.nil?
         value = ask_for(question, default)
-        git :config, scope, key, value
+        git :config, scope, key, %{"#{value}"}
       end
       value
     end
