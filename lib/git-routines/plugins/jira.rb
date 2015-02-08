@@ -6,6 +6,8 @@ setup do
   @jira_url          = config('jira.url', 'Base URL if your JIRA instance', :local)
   @jira_context_path = config('jira.context-path', 'JIRA context path (leave empty if unsure)', :local) || ""
   @project_id        = config('jira.project-id', 'JIRA project key', :local)
+  @start_transition  = "Start Progress"
+  @finish_transition = config('jira.finish-transition', 'When finished, execute transition (e.g. "Resolve Issue")', :local)
   @jira_api          = JIRA::Client.new(username: @jira_username, 
                                         password: @jira_password, 
                                         site: @jira_url, 
@@ -21,7 +23,7 @@ before_start do
 end
 
 after_start do
-  jira_transition_to_in_progress @issue
+  jira_transition_start_progress @issue
 end
 
 before_finish do
@@ -32,7 +34,6 @@ before_finish do
 end
 
 after_finish do
-  raise "to be implemented"
   # new_state = @issue.story_type == 'chore' ? 'accepted' : 'finished'
   # update_story @issue.id, current_state: new_state
 end
@@ -67,15 +68,23 @@ def jira_select_issue
   end
 end
 
-def jira_transition_to_in_progress(issue)
-  transistions = @jira_api.Transition.all(issue: issue)
-  start_progress_transition = transistions.find { |t| t.name == "Start Progress" }
+def jira_transition_start_progress(issue)
+  jira_transition(issue, @start_transition)
+end
 
-  if start_progress_transition
-    @jira_api.post("#{issue.self}/transitions", { transition: start_progress_transition.id }.to_json )
-  else
-    abort "Cannot find transistion 'Start Progress' for #{issue.key}"
-  end
+def jira_transition_fininsh_progress(issue)
+  jira_transition(issue, @finish_transition)
+end
+
+def jira_transition(issue, transition_name)
+  transition = jira_find_transition(transition_name)
+  abort "Cannot find transistion #{transition_name} for #{issue.key}" unless transition
+  @jira_api.post("#{issue.self}/transitions", { transition: transistion.id }.to_json )
+end
+
+def jira_find_transition(transition_name)
+  transistions = @jira_api.Transition.all(issue: issue)
+  transistions.find { |t| t.name == transition_name }
 end
 
 def jira_issue_url(issue)
