@@ -4,14 +4,13 @@ setup do
   @jira_username     = config('jira.username', 'Your JIRA username', :local)
   @jira_password     = config('jira.password', 'Your JIRA Password', :local)
   @jira_url          = config('jira.url', 'Base URL if your JIRA instance', :local)
-  @jira_context_path = config('jira.context-path', 'JIRA context path (use / if unsure)', :local)
+  @jira_context_path = config('jira.context-path', 'JIRA context path (leave empty if unsure)', :local) || ""
   @project_id        = config('jira.project-id', 'JIRA project key', :local)
   @jira_api          = JIRA::Client.new(username: @jira_username, 
                                         password: @jira_password, 
                                         site: @jira_url, 
-                                        auth_type: :basic, 
-                                        context_path: '')
-  @project           = @jira_api.Project.find(@project_id)
+                                        context_path: @jira_context_path,
+                                        auth_type: :basic) 
 end
 
 before_start do
@@ -26,11 +25,10 @@ after_start do
 end
 
 before_finish do
-  raise "to be implemented"
-  # @issue_id = branch.match(/(?<         = feature\/|chore\/|bug\/)(\d+)(? = -)/).to_s.to_i
-  # @issue    = @project.story(@story_id)
-  # @title    = @issue.name
-  # @summary  = jira_generate_summary
+  @issue_id = branch.upcase.match(/.*\/(#{@project_id}-\d+)-.*/)[1]
+  @issue    = @jira_api.Issue.find(@issue_id)
+  @title    = @issue.summary
+  @summary  = jira_generate_summary
 end
 
 after_finish do
